@@ -1,0 +1,788 @@
+<html>
+    <head>
+        <title>Trackmania Random Block tool</title>
+
+        <link rel="stylesheet" href="https://unpkg.com/purecss@2.0.6/build/pure-min.css" integrity="sha384-Uu6IeWbM+gzNVXJcM9XV3SohHtmWE+3VGi496jvgX1jyvDTXfdK+rfZc8C1Aehk5" crossorigin="anonymous">
+
+        <style>
+            .site-container {
+                margin: 2em 10em 2em 10em;
+            }  
+
+            .center-container {
+                display:flex;
+                justify-content: center;
+            }
+            
+            .container {
+                display: flex;
+                flex-direction: column;
+            }
+
+            #history > div:last-child {
+                font-weight: bold;
+            }
+
+            .form-label {
+                color: #999;
+                font-size: small;
+                letter-spacing: normal !important;
+            }
+
+            input, select {
+                margin-top: 0.2em;
+                margin-bottom: 0.2em;
+            }
+
+            #MoodLabel, #CarLabel {
+                margin: 0.7em 0 0 0;
+            }
+
+            .green-label {
+                color: #0b0 !important;
+                text-shadow: 1px 1px 1px #000;
+            }
+
+            .orange-label {
+                color: #fa0;
+                text-shadow: 1px 1px 1px #000;
+            }
+
+            .aqua-label {
+                color: #0af;
+                text-shadow: 1px 1px 1px #000;
+            }
+
+            .darkgreen-label {
+                color: #070;
+                text-shadow: 1px 1px 1px #000;
+            }
+
+        </style>
+    </head>
+
+    <body>
+
+        <div class="site-container">
+
+            <div class="pure-g">
+                <div class="pure-u-1-3">
+                    <div class="pure-form">
+
+                        <label for="enviSelect" class="form-label">Select the environment</label> <br>
+                        <select id="enviSelect" onchange="EnviChange()">
+                            <option value="TM2020" class="green-label">Trackmania (2020)</option>
+                            <option value="TM2C" class="orange-label">TM²: Canyon</option>
+                            <option value="TM2V" class="darkgreen-label">TM²: Valley</option>
+                            <option value="TM2L" class="aqua-label">TM²: Lagoon</option>
+                            <option value="TM2S" class="green-label">TM²: Stadium</option>
+                        </select>
+                        
+                    </div>
+                </div>
+
+                <div class="pure-u-1-3">
+                    <label class="form-label">Click for a random mood.</label><br>
+                    <h3 id="MoodLabel" onclick="RandomMood()"></h3>
+                </div>
+
+                <div class="pure-u-1-3">
+                    <label class="form-label">Click for a random car.</label><br>
+                    <h3 id="CarLabel" onclick="RandomCar()">StadiumCar</h3>
+                </div>
+            </div>
+            
+            <hr>
+            <div style="height:2em"></div>
+
+            <div class="pure-g">
+                <!-- Block History -->
+                <div class="pure-u-1-6">
+                    <h4>History</h4>
+                    <hr> 
+                    <div id="history">
+
+                    </div>
+                </div>
+
+
+                <div class="pure-u-1-6"></div>
+
+                <!-- Generator UI -->
+                <div class="pure-u-2-3 pure-form">
+
+                    <!-- Generator Settings -->
+                    <div class="pure-g">
+                        <div class="pure-u-1-3">
+                            <br>
+                            <button id="GeneratorButton" class="pure-button" onclick="GeneratorClick()">Next Block</button> 
+                        </div>
+
+                        <div class="pure-u-1-3">
+                            <label for="GeneratorCount" class="form-label">Number of picked blocks</label>
+                            <input type="number" id="GeneratorCount" value="1" min="1"/>                            
+                        </div>
+
+                        <div class="pure-u-1-3">
+                            <!-- block restrictions come here -->
+                        </div>     
+
+                    </div>
+
+                    <hr>
+
+                    <div class="center-container mid-row">
+                        <h3 id="result"></h3>
+                    </div>
+
+                    <hr>
+
+                    <!-- Import/Export -->
+                    <div class="pure-g">
+                        
+
+                        <div class="pure-u-1-3">
+                            <!-- Import -->
+                            <button id="GeneratorImport" class="pure-button" onclick="ImportHistory()">Import</button>
+                            <input id="GeneratorFileInput" type="file" accept="application/json" hidden>
+                        </div>
+
+                        <div class="pure-u-1-3">
+                            <button id="GeneratorExport" class="pure-button" onclick="ExportHistory()">Export</button>
+                            <a id="GeneratorExportAnchor" hidden></a>
+                        </div>   
+
+                        <div class="pure-u-1-3">
+                            <input type="text" id="GeneratorExportNameInput" value="history.json"><br>
+                            <label for="GeneratorExportNameInput" class="form-label">Export file name</label>
+                        </div>
+                
+                    </div>
+
+                    <div style="height:2em"></div>
+                    <hr>
+                    <div style="height:2em"></div>
+
+                    <!-- Folder List -->
+                    <div class="pure-g">
+
+                        <div class="pure-u-1-2">
+                            <table class="pure-table pure-form">
+                                <!-- heading -->
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>Folder</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <!-- programatically populated body -->
+                                <tbody id="FolderTableBody">
+                                    
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="pure-u-1-6"></div>
+
+                        <div class="prue-u-1-3">
+                            <div class="pure-form">
+                                <label for="ApplyFiltersButton" class="form-label">Apply the current filter</label><br>
+                                <button class="pure-button" id="ApplyFiltersButton" onclick="ApplyFilters()">Apply</button> <br>
+
+                                <div style="height: 0.5em"></div>
+
+                                <label for="ResetFiltersButton" class="form-label">Reset the current filter</label> <br>
+                                <button class="pure-button" id="ResetFiltersButton" onclick="ResetFilters()">Reset</button> <br>
+
+                                <div style="height: 0.5em"></div>
+
+                                <label for="InvertFiltersButton" class="form-label">Invert the current filter</label> <br>
+                                <button class="pure-button" id="InvertFiltersButton" onclick="InvertFilters()">Invert</button> <br>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+
+
+    <script>
+        const SuperTree = {
+            "tm2020": [
+                [
+                    [4, 5, 4, 5],
+                    [3, 3, 6, 4, 2],
+                    [3, 4, 4, 4, 4, 3, 3, 3, 3],
+                    [2, 2, 4, 4, 2, 6, 4],
+                    [7, 5],
+                    [5, 5, 5, 5, 5, 5, 5],
+                    [7, 7, 7, 7, 7],
+                    [4, 4, 4]
+                ],
+
+                [
+                    [4, 5, 4, 5],
+                    [3, 3, 6, 4, 2],
+                    [3, 4, 4, 4, 4, 3, 3, 3, 3],
+                    [2, 2, 4, 4, 2, 6, 4],
+                    [7, 5],
+                    [5, 5, 5, 5, 5, 5, 5],
+                    [7, 7, 7, 7, 7],
+                    7,
+                    [2, 2, 2]
+                ],
+
+                [
+                    [4, 5, 4, 5],
+                    [3, 3, 6, 4, 2],
+                    [3, 4, 4, 4, 4, 3, 3, 3, 3],
+                    [2, 2, 4, 4, 2, 6, 4],
+                    [7, 5],
+                    [5, 5, 5, 5, 5, 5, 5],
+                    [7, 7, 7, 7, 7],
+                    [2, 2, 2, 2, 2, 2, 2],
+                    [2, 3, 3, 2, 2]
+                ],
+
+                [
+                    [4, 5, 4, 5],
+                    [5, 5],
+                    [3, 3, 4, 4, 2],
+                    [3, 3],
+                    [5, 5, 5],
+                    [7, 7],
+                    [2, 2]
+                ],
+
+                [
+                    [3, 3, 3, 2],
+                    [2, 3, 3, 4, 3, 3, 4, 4],
+                    [9, 7, 8, 3, 4, 6, 8],
+                    [5, 4, 3],
+                    [5, 5, 5, 5, 5],
+                    [7, 7, 7],
+                    [3, 5, 5, 7, 5],
+                    [5, 5, 5, 5, 5, 5, 5, 5],
+                    [5, 3, 5, 5, 5, 5, 7, 4]
+                ],
+
+                [
+                    [3, 3, 3, 2],
+                    [2, 3, 3, 4, 3, 3, 4, 4],
+                    [9, 7, 8, 3, 4, 6, 8],
+                    [5, 4, 3],
+                    [5, 5, 5, 5, 5],
+                    [7, 7, 7],
+                    [3, 5, 5, 7, 5],
+                    [5, 5, 5, 5, 5, 5, 5, 5],
+                    [5, 3, 5, 5, 5, 5, 4, 4, 3]
+                ],
+
+                [
+                    [3, 3, 3, 2],
+                    [2, 3, 3, 4, 3, 3, 4, 4],
+                    [9, 7, 8, 3, 4, 6, 8],
+                    [5, 4, 3],
+                    [5, 5, 5, 5, 5],
+                    [7, 7, 7],
+                    [3, 5, 5, 7, 5],
+                    [5, 5, 5, 5, 5, 5, 5, 5],
+                    [5, 3, 5, 5, 5, 5, 4, 4, 3]
+                ],
+
+                [
+                    [3, 3, 3, 2],
+                    [2, 3, 3, 4, 3, 3, 4, 4],
+                    [9, 7, 8, 3, 4, 6, 8],
+                    [5, 4, 3],
+                    [5, 5, 5, 5, 5],
+                    [7, 7, 7],
+                    [3, 5, 5, 7, 5],
+                    [5, 5, 5, 5, 5, 5, 5, 5],
+                    [5, 3, 5, 5, 5, 5, 4, 4, 3]
+                ],
+
+                [
+                    [3, 3, 3, 2],
+                    [2, 3, 3, 4, 3, 3, 4, 4],
+                    [9, 7, 8, 3, 4, 6, 8],
+                    [5, 4, 3],
+                    [5, 5, 5, 5, 5],
+                    [7, 7, 7]
+                ],
+
+                [
+                    [
+                        [2, 2, 2],
+                        [2, 2, 2, 2, 2],
+                        [2, 2, 2, 2],
+                        3,
+                        2
+                    ],
+                    [3, 2, 3, 2, 2],
+                    [2, 3, 5, 6, 1, 7, 7, 3],
+                    [2, 2, 5, 6, 1, 7, 7, 3],
+                    [2, 2, 5, 6, 1, 7, 7, 3],
+                    [6, 3]
+                ],
+
+                [
+                    [2, 2, 2, 2, 2, 1],
+                    [2, 2, 2, 2, 2, 1],
+                    [2, 2, 2, 2, 2, 1]
+                ],
+
+                [
+                    2,
+                    [2, 7],
+                    [[3, 2, 2], [3, 3, 3], [3, 3, 3], 2, 2],
+                    [6, 2],
+                    [7],
+                    2
+                ],
+
+                [
+                    [ 
+                        [4, 4, 5, 5],
+                        [3, 3, 6, 4, 2],
+                        [3, 4, 4, 4, 4, 3, 3, 3, 3],
+                        [2, 2, 4, 4, 2, 6],
+                        [3, 3, 4],
+                        [3, 3]
+                    ],
+
+                    [ 
+                        [3, 4, 2, 2],
+                        [2, 3, 3, 4],
+                        [3, 3, 4, 4],
+                        [1, 3, 3, 3, 4],
+                        [3, 3, 3],
+                        [3, 4]
+                    ]
+                ]
+            ],
+
+            "tm2c": [
+                [7, 9, 14, 12, 14, 13, 5, 6, 4, 8],
+                [4, 8, 9, 13, 6, 6, 3],
+                [4, 2, 5, 3, 3, 4, 9, 6, 6],
+                [6, 7, 10, 4],
+                [11, 9, 4, 3, 10, 9, 4, 8],
+                [6, 3, 5, 6, 4, 9],
+                9,
+                [6, 6, 7, 4, 6, 6, 7, 4],
+                [9, 11, 10, 5, 8, 10, 6, 7, 5, 5, 4],
+                [7, 8, 10]
+            ],
+
+            "tm2v": [
+                [10, 9, 11, 12, 17, 4, 5, 11],
+                [6, 6, 7, 6, 5],
+                [9, 11, 7, 6, 5, 4, 5, 4, 13],
+                [9, 9, 5, 8, 10, 2, 8],
+                [10, 8, 10, 10, 9, 8, 12, 12, 10, 5, 4],
+                [9, 6, 6, 7, 10, 13],
+                [6, 6, 9, 4, 5],
+                [6, 8, 10, 10, 10],
+                [8, 13, 10],
+                [10, 9, 9],
+                [7, 9, 9, 2, 7, 9]
+            ],
+
+            "tm2s": [
+                [8, 6, 4, 4, 12, 6, 2],
+                [9, 2, 4, 4, 6, 6, 2],
+                [10, 2, 4, 4, 8, 8, 6],
+                [4, 13, 7, 7, 12, 5, 7, 8, 6, 4],
+                [5, 7, 8, 9, 10, 10, 10, 10, 10, 5, 10],
+                [9, 2, 5, 7, 2, 5, 7, 5, 6, 7, 10],
+                [9, 6, 8],
+                [4, 8, 13, 6, 8],
+                [14, 11, 8, 7]
+            ],
+
+            "tm2l": [
+                [9, 7, 8, 8, 8, 8, 8, 8, 12, 8],
+                [11, 9, 5],
+                [12, 8, 11, 9, 8, 6, 6, 9, 9],
+                [11, 13, 10, 10, 11, 6],
+                [10, 11, 8, 3, 3, 6, 6],
+                [11, 9, 2, 6],
+                10,
+                [11, 10, 8, 8, 6, 5],
+                [7, 8]
+            ]
+        };
+
+        const Descriptions = {
+            "tm2020": [
+                "Tarmac road blocks",
+                "Dirt road blocks",
+                "Bulge road blocks",
+                "Bobsleigh blocks",
+                "Tarmac platform blocks",
+                "Dirt platform blocks",
+                "Ice platform blocks",
+                "Grass platform blocks",
+                "Plastic platform blocks",
+                "Water blocks",
+                "Terrain blocks",
+                "Signs and pillars",
+                "Block foundations"
+            ],
+
+            "tm2c": [
+                "GP road blocks",
+                "Platform blocks",
+                "Platform wall blocks",
+                "Platform tunnel blocks",
+                "Magnetic pipe blocks",
+                "Narrow road blocks",
+                "Hill road blocks",
+                "Cliff road blocks",
+                "Tunnel blocks",
+                "Trees and decor"
+            ],
+
+            "tm2v": [
+                "Narrow road blocks",
+                "Narrow forest road",
+                "Highway road blocks",
+                "Highway tunnel road",
+                "Platform blocks",
+                "Dirt road blocks",
+                "Dirt mountainous road",
+                "Castle blocks",
+                "Stone bridge blocks",
+                "Railway blocks",
+                "Decor and farm blocks"
+            ],
+
+            "tm2l": [
+                "Main road blocks",
+                "Freeway road blocks",
+                "Rollercoaster blocks",
+                "Wood platform blocks",
+                "Main road tunnel",
+                "Beach blocks",
+                "Offroad decor and CPs",
+                "City blocks",
+                "Stranded ship blocks"
+            ],
+
+            "tm2s": [
+                "Flat road blocks",
+                "Slope road blocks",
+                "Banked road blocks",
+                "PlatformGrid and PlatformRoad blocks",
+                "Circuit blocks",
+                "Dirt road blocks",
+                "Trench road blocks",
+                "Pillars and ControlRoad blocks",
+                "White hall, Inflatables, Sculptures and DecoTower"
+            ]
+        }
+
+        const CheckboxPrefix = "FolderCheckbox";
+
+        /**
+         * @type {Array<string>}
+         */
+        let BlockArray = undefined;
+
+        let GeneratedHistory = [];
+
+        function GetNumberOfFolders() {
+            let envi = document.getElementById('enviSelect').value;
+
+            let n = 0;
+
+            if (envi === 'TM2020') n = SuperTree.tm2020.length;
+            if (envi === 'TM2C') n = SuperTree.tm2c.length;
+            if (envi === 'TM2V') n = SuperTree.tm2v.length;
+            if (envi === 'TM2L') n = SuperTree.tm2l.length;
+            if (envi === 'TM2S') n = SuperTree.tm2s.length;
+
+            return n;
+        }
+
+        function PopulateFolderTable () {
+            let n = GetNumberOfFolders();
+
+            let tablebody = document.getElementById('FolderTableBody');
+            tablebody.innerHTML = "";
+
+            let envi = document.getElementById('enviSelect').value,
+                DescArray = [];
+
+            if (envi === 'TM2020') DescArray = Descriptions.tm2020;
+            if (envi === 'TM2C') DescArray = Descriptions.tm2c;
+            if (envi === 'TM2V') DescArray = Descriptions.tm2v;
+            if (envi === 'TM2L') DescArray = Descriptions.tm2l;
+            if (envi === 'TM2S') DescArray = Descriptions.tm2s;
+
+
+            for (let i = 1; i <= n; i++) {
+                    let row = tablebody.insertRow();
+
+                    row.innerHTML = `
+                    <tr>
+                        <td><input type="checkbox" id="${CheckboxPrefix + i}"" checked></td>
+                        <td><label for="${CheckboxPrefix + i}">${i}</label></td>
+                        <td><label for="${CheckboxPrefix + i}">${DescArray[i - 1]}</label></td>
+                    </tr>
+                    `
+                }
+        }
+
+        function ApplyFilters () {
+            let n = GetNumberOfFolders(),
+                envi = document.getElementById('enviSelect').value;
+
+            let tree;
+
+            if (envi === 'TM2020') tree = SuperTree.tm2020;
+            if (envi === 'TM2C') tree = SuperTree.tm2c;
+            if (envi === 'TM2V') tree = SuperTree.tm2v;
+            if (envi === 'TM2L') tree = SuperTree.tm2l;
+            if (envi === 'TM2S') tree = SuperTree.tm2s;
+
+            let prelimArray = TreeToArray(tree, "");
+
+            for (let i = 1; i <= n; i++) {
+                let cb = CheckboxPrefix + i;
+
+                if (document.getElementById(cb).checked !== true) {
+                    prelimArray = prelimArray.filter(word => !word.startsWith(i + '-'));
+                }
+            }
+
+            BlockArray = prelimArray;
+        }
+
+        function ResetFilters () {
+            PopulateFolderTable();
+
+            let tree,
+                envi = document.getElementById('enviSelect').value;
+
+            if (envi === 'TM2020') tree = SuperTree.tm2020;
+            if (envi === 'TM2C') tree = SuperTree.tm2c;
+            if (envi === 'TM2V') tree = SuperTree.tm2v;
+            if (envi === 'TM2L') tree = SuperTree.tm2l;
+            if (envi === 'TM2S') tree = SuperTree.tm2s;
+
+            BlockArray = TreeToArray(tree, "");
+        }
+
+        function InvertFilters () {
+            let n = GetNumberOfFolders();
+
+            for (let i = 1; i <= n; i++) {
+                let cb = CheckboxPrefix + i;
+
+                document.getElementById(cb).checked = !document.getElementById(cb).checked;
+            }
+        }
+
+        function EnviChange(resetHistory = true) {
+            let envi = document.getElementById('enviSelect').value;
+
+            // select tree
+            let tree;
+            if (envi === 'TM2020') {
+                tree = SuperTree.tm2020;
+                document.getElementById('CarLabel').innerHTML = 'StadiumCar';
+            }
+            if (envi === 'TM2C') {
+                tree = SuperTree.tm2c;
+                document.getElementById('CarLabel').innerHTML = 'CanyonCar';
+            }
+            if (envi === 'TM2V') {
+                tree = SuperTree.tm2v;
+                document.getElementById('CarLabel').innerHTML = 'ValleyCar';
+            }
+            if (envi === 'TM2L') { 
+                tree = SuperTree.tm2l;
+                document.getElementById('CarLabel').innerHTML = 'LagoonCar';
+            }
+            if (envi === 'TM2S') {
+                tree = SuperTree.tm2s;
+                document.getElementById('CarLabel').innerHTML = 'StadiumCar';
+            }
+
+            BlockArray = TreeToArray(tree, "");
+
+            if (resetHistory) {
+                GeneratedHistory = [];
+                document.getElementById("history").innerHTML = "";
+                document.getElementById("result").innerHTML = "";
+            }
+
+            PopulateFolderTable();
+
+        }
+
+        function RandomMood() {
+            let mood = ['Sunrise', 'Day', 'Sunset', 'Night'][(Math.floor(Math.random() * 4))];
+
+            document.getElementById('MoodLabel').innerHTML = mood;
+        }
+
+        function RandomCar() {
+            let envi = document.getElementById('enviSelect').value;
+
+            // including TMU cars
+            const tm2cars = ['CanyonCar', 'ValleyCar', 'StadiumCar', 'LagoonCar', 'RallyCar', 'BayCar', 'CoastCar', 'IslandCar', 'DesertCar', 'StadiumCar', 'SnowCar'];
+
+            const tmufcars = ['RallyCar', 'BayCar', 'CoastCar', 'IslandCar', 'DesertCar', 'StadiumCar', 'SnowCar'];
+
+            if (envi === 'TM2020') {
+                document.getElementById('CarLabel').innerHTML = 'StadiumCar';
+            }
+
+            if (['TM2C', 'TM2V', 'TM2L', 'TM2S'].includes(envi)) {
+                document.getElementById('CarLabel').innerHTML = tm2cars[(Math.floor(Math.random() * tm2cars.length))];
+            }
+        }
+
+        function TreeToArray(tree, prefix) {
+            let resultArray = [];
+
+            tree.forEach((subElement, i) => {
+                let newPrefix = prefix + `${i + 1}-`;
+
+                //console.log(newPrefix);
+                
+                if (Array.isArray(subElement)) {
+
+                    let partialResult = TreeToArray(subElement, newPrefix);
+
+                    resultArray = resultArray.concat(partialResult);
+                }
+
+                else
+                    for (let j = 1; j <= subElement; j++) {
+                        resultArray.push(`${newPrefix}${j}`);
+                    }
+            });
+
+            return resultArray;
+        }
+
+        // removes a folder from the generated array
+        function RemoveFolder(folder) {
+            if (BlockArray === undefined)
+                EnviChange();
+
+            BlockArray.forEach((block, index) => {
+                let firstFolder = block.split('-')[0];
+            })
+        }
+
+        function GenerateBlock() {
+            if (BlockArray === undefined)
+                EnviChange();
+
+            let newBlock = BlockArray[Math.floor(Math.random() * BlockArray.length)];
+            GeneratedHistory.push(newBlock);
+
+            return newBlock;
+        }
+
+        function GeneratorClick() {
+            let nr = document.getElementById('GeneratorCount').value;
+            
+            let newBlocks = [];
+
+            for (let i = 0; i < nr; i++) {
+                let newBlock = GenerateBlock();
+
+                document.getElementById("history").innerHTML += `<div>${newBlock}</div> \n`;   
+                newBlocks.push(newBlock);
+            }
+
+            let resultHTML = '';
+
+            newBlocks.forEach((block, i) => {
+                if (i === newBlocks.length - 1) {
+                    // last element
+                    resultHTML += block
+                }
+
+                else {
+                    // not last
+                    resultHTML += block + " → ";
+                }
+            });
+
+            document.getElementById("result").innerHTML = resultHTML;
+        }
+
+        function ImportHistory() {
+            let input = document.getElementById("GeneratorFileInput");
+
+            // function run, when file's loaded
+            input.onchange = _ => {
+                let file = Array.from(input.files)[0],
+                    reader = new FileReader();
+
+                // function run, when the reader is done reading
+                reader.onload = _ => {
+                    let json = reader.result;
+
+                    importObject = JSON.parse(json);
+
+                    document.getElementById('MoodLabel').innerHTML = importObject.mood;
+                    document.getElementById('CarLabel').innerHTML = importObject.car;
+
+                    document.getElementById('enviSelect').value = importObject.envi;
+
+                    GeneratedHistory = importObject.history;
+
+                    let h = document.getElementById("history");
+                    h.innerHTML = "";
+                    
+                    GeneratedHistory.forEach(block => {
+                        document.getElementById("history").innerHTML += `<div>${block}</div> \n`;
+                    })
+                }
+
+                // start reading
+                reader.readAsText(file);               
+            }
+            
+            // start it all
+            input.click();
+        }
+
+        function ExportHistory() {
+            let exportObject = {
+                mood: document.getElementById('MoodLabel').innerHTML,
+                car: document.getElementById('CarLabel').innerHTML,
+                envi: document.getElementById('enviSelect').value,
+                history : GeneratedHistory
+            };
+
+            let filename = document.getElementById('GeneratorExportNameInput').value,
+                file = new Blob([JSON.stringify(exportObject, null, 2)], { type: 'application/json' }),
+                a = document.getElementById('GeneratorExportAnchor');
+
+            a.href = URL.createObjectURL(file);
+            a.download = filename;
+            a.click();
+        }
+
+        // startup:
+        window.addEventListener('DOMContentLoaded', e => {
+            RandomMood();
+            PopulateFolderTable();
+        })
+
+
+    </script>
+
+</html>
